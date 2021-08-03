@@ -2494,7 +2494,7 @@ TEST (ledger, epoch_blocks_fork)
 	store->initialize (transaction, ledger.cache);
 	nano::work_pool pool (std::numeric_limits<unsigned>::max ());
 	nano::keypair destination;
-	nano::send_block send1 (genesis.hash (), nano::account (0), nano::dev::genesis_amount, nano::dev::genesis_key.prv, nano::dev::genesis_key.pub, *pool.generate (genesis.hash ()));
+	nano::send_block send1 (genesis.hash (), nano::account { static_cast<std::uint64_t> (0) }, nano::dev::genesis_amount, nano::dev::genesis_key.prv, nano::dev::genesis_key.pub, *pool.generate (genesis.hash ()));
 	ASSERT_EQ (nano::process_result::progress, ledger.process (transaction, send1).code);
 	nano::state_block epoch1 (nano::dev::genesis->account (), genesis.hash (), nano::dev::genesis->account (), nano::dev::genesis_amount, ledger.epoch_link (nano::epoch::epoch_1), nano::dev::genesis_key.prv, nano::dev::genesis_key.pub, *pool.generate (genesis.hash ()));
 	ASSERT_EQ (nano::process_result::fork, ledger.process (transaction, epoch1).code);
