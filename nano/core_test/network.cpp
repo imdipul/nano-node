@@ -11,6 +11,39 @@
 
 using namespace std::chrono_literals;
 
+TEST (network, mass_add_request)
+{
+	nano::system system{ 2 };
+	auto & node0 = *system.nodes[0];
+
+	ASSERT_EQ (1, node0.bootstrap.connections.size ());
+	auto connection = node0.bootstrap.connections.begin ()->second.lock ();
+	ASSERT_NE (nullptr, connection);
+
+	constexpr std::size_t thread_count = 4;
+	std::vector<std::thread> threads{};
+
+	threads.reserve (thread_count);
+	for (auto j = 0; j < thread_count; ++j)
+	{
+		threads.emplace_back ([&connection] () {
+			for (auto i = 0; i < 1000; ++i)
+			{
+				connection->add_request (std::make_unique<nano::keepalive> (nano::dev::network_params.network));
+				connection->add_request (std::make_unique<nano::frontier_req> (nano::dev::network_params.network));
+				connection->add_request (std::make_unique<nano::bulk_pull> (nano::dev::network_params.network));
+			}
+		});
+	}
+
+	for (auto & i : threads)
+	{
+		i.join ();
+	}
+
+	ASSERT_TIMELY (3s, connection->requests.empty ());
+}
+
 TEST (network, tcp_connection)
 {
 	boost::asio::io_context io_ctx;
